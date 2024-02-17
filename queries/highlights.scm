@@ -16,6 +16,10 @@
 
 (comment) @comment @spell
 
+(identifier) @variable
+
+(type_identifier) @type
+
 ; Literals
 (string_literal) @string
 
@@ -23,13 +27,20 @@
 
 (num_literal) @number
 
+(value_path
+  package: (identifier) @variable @namespace)
+
+
 (call_expr
   function: (value_expr (value_path 
                           package: (identifier) @variable
-                          name: (identifier) @function.call
+                          name: (identifier) @function
+                          )))
+(call_expr
+  function: (value_expr (value_path 
+                          name: (identifier) @function
                           )))
 
-; (float_literal) @number.float
 
 "fn" @keyword.function
 "return" @keyword.return
@@ -39,10 +50,6 @@
   "else"
   "if"
 ] @keyword.conditional
-
-(identifier) @variable
-
-(type_identifier) @type
 
 (string_literal) @string
 

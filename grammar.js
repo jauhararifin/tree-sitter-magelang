@@ -102,7 +102,7 @@ module.exports = grammar({
       choice(
         ';',
         $.stmt_block,
-      )
+      ),
     ),
 
     stmt_block: $ => seq(
@@ -121,7 +121,7 @@ module.exports = grammar({
 
     stmt_if: $ => seq(
       'if', $.value_expr, $.stmt_block,
-      optional(seq('else', $.stmt_if)),
+      optional(seq('else', choice($.stmt_block, $.stmt_if))),
     ),
 
     stmt_continue: _ => seq('continue', ';'),
@@ -197,7 +197,11 @@ module.exports = grammar({
       $.unary_expr,
       $.cast_expr,
       $.call_expr,
+      $.index_expr,
+      $.selection_expr,
+      $.deref_expr,
       seq('(', $.value_expr, ')'),
+      $.struct_literal,
       $.num_literal,
       $.char_literal,
     ),
@@ -281,6 +285,36 @@ module.exports = grammar({
       '(',
       repeat(seq($.value_expr, optional(','))),
       ')',
+    )),
+
+    index_expr: $ => prec.left(10, seq(
+      field('array', $.value_expr),
+      '[',
+      $.value_expr,
+      ']',
+    )),
+
+    selection_expr: $ => prec.left(10, seq(
+      $.value_expr,
+      '.',
+      $.field_identifier,
+    )),
+
+    deref_expr: $ => prec.left(10, seq(
+      $.value_expr,
+      '.',
+      '*',
+    )),
+
+    struct_literal: $ => prec.left(-2, seq(
+      $.value_path,
+      '{',
+      optional(seq(
+        seq($.identifier, ':', $.value_expr),
+        repeat(seq(',', $.identifier, ':', $.value_expr)),
+        optional(','),
+      )),
+      '}',
     )),
 
     field_identifier: _ => seq(
