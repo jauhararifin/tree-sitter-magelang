@@ -68,7 +68,7 @@ module.exports = grammar({
 
     type_parameter: $ => seq(
       '<',
-      seq($.type_expr, repeat(seq(',', $.type_expr))),
+      seq($.type_identifier, repeat(seq(',', $.type_identifier))),
       '>',
     ),
 
@@ -111,8 +111,33 @@ module.exports = grammar({
       '}',
     ),
 
+    stmt_expr: $ => seq($.value_expr, ';'),
+
+    stmt_assignment: $ => seq($.value_expr, '=', $.value_expr, ';'),
+
+    stmt_while: $ => seq(
+      'while', $.value_expr, $.stmt_block,
+    ),
+
+    stmt_if: $ => seq(
+      'if', $.value_expr, $.stmt_block,
+      optional(seq('else', $.stmt_if)),
+    ),
+
+    stmt_continue: _ => seq('continue', ';'),
+    stmt_break: _ => seq('break', ';'),
+    stmt_return: $ => seq('return', optional($.value_expr), ';'),
+
     stmt: $ => choice(
       $.stmt_block,
+      $.let_declaration,
+      $.stmt_expr,
+      $.stmt_assignment,
+      $.stmt_while,
+      $.stmt_if,
+      $.stmt_continue,
+      $.stmt_break,
+      $.stmt_return,
     ),
 
     type_expr: $ => choice(
@@ -147,32 +172,40 @@ module.exports = grammar({
       $.type_expr,
     ),
 
-    type_path: $ => seq(
+    type_path: $ => prec.left(11, seq(
       $.type_identifier,
       repeat(seq(
         '::',
         $.type_identifier,
       )),
-      optional($.type_parameter),
+      optional($.type_arguments),
+    )),
+
+    type_arguments: $ => seq(
+      '<',
+      seq($.type_expr, repeat(seq(',', $.type_expr))),
+      '>',
     ),
 
     value_expr: $ => choice(
-      $.identifier,
+      $.value_path,
       $.true,
       $.false,
       $.null,
       $.string_literal,
       $.bin_expr,
       $.unary_expr,
+      $.cast_expr,
+      $.call_expr,
       seq('(', $.value_expr, ')'),
       $.num_literal,
       $.char_literal,
     ),
 
-    true: _ => 'true',
-    false: _ => 'false',
-    null: _ => 'null',
-    num_literal: _ => token(choice(
+    true: _ => prec.left(11, 'true'),
+    false: _ => prec.left(11, 'false'),
+    null: _ => prec.left(11, 'null'),
+    num_literal: _ => prec.left(11, token(choice(
       // binary
       seq('0', 'b', optional('_'), seq(/[01]/, repeat(seq(optional('_'), /[01]/)))),
 
@@ -185,8 +218,8 @@ module.exports = grammar({
 
       // hex
       seq('0', 'x', optional('_'), seq(/[0-9a-fA-F]/, repeat(seq(optional('_'), /[0-9a-fA-F]/)))),
-    )),
-    char_literal: _ => token(seq(
+    ))),
+    char_literal: _ => prec.left(11, token(seq(
       '\'',
       choice(
         /[^'\\]/,
@@ -196,7 +229,7 @@ module.exports = grammar({
         )),
       ),
       '\'',
-    )),
+    ))),
 
     bin_expr: $ => choice(
       prec.left(7, seq($.value_expr, '*', $.value_expr)),
@@ -219,9 +252,35 @@ module.exports = grammar({
       prec.left(-2, seq($.value_expr, '||', $.value_expr)),
     ),
 
-    unary_expr: $ => prec.left(8, seq(
+    cast_expr: $ => prec.left(8, seq(
+      $.value_expr,
+      'as',
+      $.type_expr,
+    )),
+
+    unary_expr: $ => prec.left(9, seq(
       choice('+', '-', '~', '!'),
       $.value_expr,
+    )),
+
+    value_path: $ => prec.left(10, choice(
+      seq(
+        field('name', $.identifier),
+        optional(seq('::', $.type_arguments)),
+      ),
+      seq(
+        field('package', $.identifier),
+        '::',
+        field('name', $.identifier),
+        optional(seq('::', $.type_arguments)),
+      ),
+    )),
+
+    call_expr: $ => prec.left(10, seq(
+      field('function', $.value_expr),
+      '(',
+      repeat(seq($.value_expr, optional(','))),
+      ')',
     )),
 
     field_identifier: _ => seq(

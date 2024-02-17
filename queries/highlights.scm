@@ -1,15 +1,15 @@
 [
   "let"
   "struct"
-  ; "if"
-  ; "else"
-  ; "while"
+  "if"
+  "else"
+  "while"
   "fn"
-  ; "return"
+  "return"
   "import"
-  ; "as"
-  ; "continue"
-  ; "break"
+  "as"
+  "continue"
+  "break"
 ] @keyword
 
 (null) @constant.builtin
@@ -23,16 +23,22 @@
 
 (num_literal) @number
 
+(call_expr
+  function: (value_expr (value_path 
+                          package: (identifier) @variable
+                          name: (identifier) @function.call
+                          )))
+
 ; (float_literal) @number.float
 
 "fn" @keyword.function
-; "return" @keyword.return
-; "while" @keyword.repeat
+"return" @keyword.return
+"while" @keyword.repeat
 
-; [
-;   "else"
-;   "if"
-; ] @keyword.conditional
+[
+  "else"
+  "if"
+] @keyword.conditional
 
 (identifier) @variable
 
@@ -52,5 +58,4 @@
 
 (func_declaration
   name: (identifier) @function)
-
 
