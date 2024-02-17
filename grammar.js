@@ -39,13 +39,19 @@ module.exports = grammar({
     ),
 
     import: $ => seq(
+      repeat($.annotation),
       'import',
       $.identifier,
       $.string_literal,
       ';',
     ),
 
+    annotation: $ => seq(
+      field('at', '@'),
+      field('name', $.identifier), '(', repeat($.string_literal), ')'),
+
     struct_declaration: $ => seq(
+      repeat($.annotation),
       'struct',
       field('name', $.type_identifier),
       optional(seq(
@@ -73,6 +79,7 @@ module.exports = grammar({
     ),
 
     let_declaration: $ => seq(
+      repeat($.annotation),
       'let',
       field('name', $.identifier),
       choice(
@@ -84,6 +91,7 @@ module.exports = grammar({
     ),
 
     func_declaration: $ => seq(
+      repeat($.annotation),
       'fn',
       field('name', $.identifier),
       field('type_params', optional($.type_parameter)),
@@ -174,10 +182,7 @@ module.exports = grammar({
 
     type_path: $ => prec.left(11, seq(
       $.type_identifier,
-      repeat(seq(
-        '::',
-        $.type_identifier,
-      )),
+      optional(seq('::', $.type_identifier)),
       optional($.type_arguments),
     )),
 

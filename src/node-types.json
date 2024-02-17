@@ -1,5 +1,41 @@
 [
   {
+    "type": "annotation",
+    "named": true,
+    "fields": {
+      "at": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "@",
+            "named": false
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "string_literal",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "bin_expr",
     "named": true,
     "fields": {},
@@ -151,9 +187,13 @@
       }
     },
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
         {
           "type": "stmt_block",
           "named": true
@@ -174,6 +214,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
         {
           "type": "identifier",
           "named": true
@@ -258,6 +302,10 @@
       "required": true,
       "types": [
         {
+          "type": "annotation",
+          "named": true
+        },
+        {
           "type": "type_expr",
           "named": true
         },
@@ -287,7 +335,7 @@
       "required": true,
       "types": [
         {
-          "type": "identifier",
+          "type": "field_identifier",
           "named": true
         },
         {
@@ -495,6 +543,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "annotation",
+          "named": true
+        },
         {
           "type": "field_identifier",
           "named": true
@@ -892,6 +944,10 @@
   },
   {
     "type": ">>",
+    "named": false
+  },
+  {
+    "type": "@",
     "named": false
   },
   {

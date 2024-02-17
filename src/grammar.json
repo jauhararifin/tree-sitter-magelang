@@ -33,6 +33,13 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "annotation"
+          }
+        },
+        {
           "type": "STRING",
           "value": "import"
         },
@@ -50,9 +57,52 @@
         }
       ]
     },
+    "annotation": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "at",
+          "content": {
+            "type": "STRING",
+            "value": "@"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "identifier"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "string_literal"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
     "struct_declaration": {
       "type": "SEQ",
       "members": [
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "annotation"
+          }
+        },
         {
           "type": "STRING",
           "value": "struct"
@@ -224,6 +274,13 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "annotation"
+          }
+        },
+        {
           "type": "STRING",
           "value": "let"
         },
@@ -296,6 +353,13 @@
     "func_declaration": {
       "type": "SEQ",
       "members": [
+        {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "annotation"
+          }
+        },
         {
           "type": "STRING",
           "value": "fn"
@@ -803,20 +867,25 @@
             "name": "type_identifier"
           },
           {
-            "type": "REPEAT",
-            "content": {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "::"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "type_identifier"
-                }
-              ]
-            }
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "::"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "type_identifier"
+                  }
+                ]
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           },
           {
             "type": "CHOICE",
@@ -2369,7 +2438,7 @@
           },
           {
             "type": "SYMBOL",
-            "name": "identifier"
+            "name": "field_identifier"
           }
         ]
       }

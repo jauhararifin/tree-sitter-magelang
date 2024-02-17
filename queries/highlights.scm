@@ -41,6 +41,7 @@
                           name: (identifier) @function
                           )))
 
+(struct_literal (value_path name: (identifier) @type))
 
 "fn" @keyword.function
 "return" @keyword.return
@@ -65,4 +66,8 @@
 
 (func_declaration
   name: (identifier) @function)
+
+(annotation at: "@" @punctuation
+            name: (identifier) @keyword)
+
 
