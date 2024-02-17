@@ -1,3 +1,23 @@
+const decimalDigit = /[0-9]/
+const decimalDigits = seq(decimalDigit, repeat(seq(optional('_'), decimalDigit)))
+const decimalLiteral = choice(
+  '0',
+  seq(/[1-9]/, optional(seq(
+    optional('_'),
+    seq(
+      /[0-9]/,
+      repeat(seq(optional('_'), decimalDigits)),
+    ),
+  ))),
+)
+
+const decimalExponent = seq(choice('e', 'E'), optional(choice('+', '-')), decimalDigits)
+const decimalFraction = choice(
+  seq(decimalDigits, '.', optional(decimalDigits), optional(decimalExponent)),
+  seq(decimalDigits, decimalExponent),
+  seq('.', decimalDigits, optional(decimalExponent)),
+)
+
 module.exports = grammar({
   name: 'magelang',
 
@@ -141,11 +161,68 @@ module.exports = grammar({
       $.true,
       $.false,
       $.null,
+      $.string_literal,
+      $.bin_expr,
+      $.unary_expr,
+      seq('(', $.value_expr, ')'),
+      $.num_literal,
+      $.char_literal,
     ),
 
     true: _ => 'true',
     false: _ => 'false',
     null: _ => 'null',
+    num_literal: _ => token(choice(
+      // binary
+      seq('0', 'b', optional('_'), seq(/[01]/, repeat(seq(optional('_'), /[01]/)))),
+
+      // decimal
+      decimalLiteral,
+      decimalFraction,
+
+      // octal
+      seq('0', 'o', optional('_'), seq(/[0-7]/, repeat(seq(optional('_'), /[0-7]/)))),
+
+      // hex
+      seq('0', 'x', optional('_'), seq(/[0-9a-fA-F]/, repeat(seq(optional('_'), /[0-9a-fA-F]/)))),
+    )),
+    char_literal: _ => token(seq(
+      '\'',
+      choice(
+        /[^'\\]/,
+        seq('\\', choice(
+          seq('x', /[0-9a-fA-F]{2}/),
+          'n','r','t','\\','0','\'',
+        )),
+      ),
+      '\'',
+    )),
+
+    bin_expr: $ => choice(
+      prec.left(7, seq($.value_expr, '*', $.value_expr)),
+      prec.left(7, seq($.value_expr, '/', $.value_expr)),
+      prec.left(7, seq($.value_expr, '%', $.value_expr)),
+      prec.left(6, seq($.value_expr, '+', $.value_expr)),
+      prec.left(6, seq($.value_expr, '-', $.value_expr)),
+      prec.left(5, seq($.value_expr, '<<', $.value_expr)),
+      prec.left(5, seq($.value_expr, '>>', $.value_expr)),
+      prec.left(4, seq($.value_expr, '<', $.value_expr)),
+      prec.left(4, seq($.value_expr, '<=', $.value_expr)),
+      prec.left(4, seq($.value_expr, '>', $.value_expr)),
+      prec.left(4, seq($.value_expr, '>=', $.value_expr)),
+      prec.left(3, seq($.value_expr, '==', $.value_expr)),
+      prec.left(3, seq($.value_expr, '!=', $.value_expr)),
+      prec.left(2, seq($.value_expr, '&', $.value_expr)),
+      prec.left(1, seq($.value_expr, '^', $.value_expr)),
+      prec.left(0, seq($.value_expr, '|', $.value_expr)),
+      prec.left(-1, seq($.value_expr, '&&', $.value_expr)),
+      prec.left(-2, seq($.value_expr, '||', $.value_expr)),
+    ),
+
+    unary_expr: $ => prec.left(8, seq(
+      choice('+', '-', '~', '!'),
+      $.value_expr,
+    )),
 
     field_identifier: _ => seq(
       /[_\p{XID_Start}][_\p{XID_Continue}]*/,

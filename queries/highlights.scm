@@ -8,12 +8,22 @@
   ; "return"
   "import"
   ; "as"
-  ; "null"
-  ; "true"
-  ; "false"
   ; "continue"
   ; "break"
 ] @keyword
+
+(null) @constant.builtin
+
+(comment) @comment @spell
+
+; Literals
+(string_literal) @string
+
+(char_literal) @string
+
+(num_literal) @number
+
+; (float_literal) @number.float
 
 "fn" @keyword.function
 ; "return" @keyword.return
