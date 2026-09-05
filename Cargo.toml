@@ -11,6 +11,7 @@ license = "MIT"
 build = "bindings/rust/build.rs"
 include = [
   "bindings/rust/*",
+  "example-file.mg",
   "grammar.js",
   "queries/*",
   "src/*",

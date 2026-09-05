@@ -1,0 +1,283 @@
+==============================================================================
+Import
+==============================================================================
+
+import fmt "std/fmt";
+import mem "std/mem";
+
+------------------------------------------------------------------------------
+
+(source_file
+  (import_declaration
+    name: (identifier)
+    path: (string_literal))
+  (import_declaration
+    name: (identifier)
+    path: (string_literal)))
+
+==============================================================================
+Annotated import
+==============================================================================
+
+@wasm_module("env")
+import ext "ext";
+
+------------------------------------------------------------------------------
+
+(source_file
+  (import_declaration
+    (annotation
+      name: (identifier)
+      (string_literal))
+    name: (identifier)
+    path: (string_literal)))
+
+==============================================================================
+Global with type and value
+==============================================================================
+
+let stdout: i32 = 1;
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    type: (type_path
+      name: (type_identifier))
+    value: (num_literal)))
+
+==============================================================================
+Global without value
+==============================================================================
+
+let counter: i64;
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    type: (type_path
+      name: (type_identifier))))
+
+==============================================================================
+Global inferred from value
+==============================================================================
+
+let greeting = "hi";
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    value: (string_literal)))
+
+==============================================================================
+Struct
+==============================================================================
+
+struct IoVec {
+  p: [*]u8,
+  len: usize,
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    name: (type_identifier)
+    (struct_field
+      name: (field_identifier)
+      type: (type_array_ptr
+        type: (type_path
+          name: (type_identifier))))
+    (struct_field
+      name: (field_identifier)
+      type: (type_path
+        name: (type_identifier)))))
+
+==============================================================================
+Empty struct
+==============================================================================
+
+struct Unit {}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    name: (type_identifier)))
+
+==============================================================================
+Generic struct
+==============================================================================
+
+struct Pair<T, U> {
+  a: T,
+  b: U
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    name: (type_identifier)
+    type_parameters: (type_parameters
+      (type_identifier)
+      (type_identifier))
+    (struct_field
+      name: (field_identifier)
+      type: (type_path
+        name: (type_identifier)))
+    (struct_field
+      name: (field_identifier)
+      type: (type_path
+        name: (type_identifier)))))
+
+==============================================================================
+Function declaration without body
+==============================================================================
+
+@wasm_import("wasi_snapshot_preview1", "fd_write")
+fn fd_write(fd: i32, iovec: *IoVec, count: i32, n: *i32): i32;
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    (annotation
+      name: (identifier)
+      (string_literal)
+      (string_literal))
+    name: (identifier)
+    parameters: (parameter_list
+      (parameter
+        name: (identifier)
+        type: (type_path
+          name: (type_identifier)))
+      (parameter
+        name: (identifier)
+        type: (type_ptr
+          type: (type_path
+            name: (type_identifier))))
+      (parameter
+        name: (identifier)
+        type: (type_path
+          name: (type_identifier)))
+      (parameter
+        name: (identifier)
+        type: (type_ptr
+          type: (type_path
+            name: (type_identifier)))))
+    result: (type_path
+      name: (type_identifier))))
+
+==============================================================================
+Function with body
+==============================================================================
+
+fn gcd(a: i64, b: i64): i64 {
+  return a;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list
+      (parameter
+        name: (identifier)
+        type: (type_path
+          name: (type_identifier)))
+      (parameter
+        name: (identifier)
+        type: (type_path
+          name: (type_identifier))))
+    result: (type_path
+      name: (type_identifier))
+    body: (stmt_block
+      (stmt_return
+        value: (value_path
+          name: (identifier))))))
+
+==============================================================================
+Generic function
+==============================================================================
+
+fn alloc<T>(n: usize): [*]T {
+  return null;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    type_parameters: (type_parameters
+      (type_identifier))
+    parameters: (parameter_list
+      (parameter
+        name: (identifier)
+        type: (type_path
+          name: (type_identifier))))
+    result: (type_array_ptr
+      type: (type_path
+        name: (type_identifier)))
+    body: (stmt_block
+      (stmt_return
+        value: (null)))))
+
+==============================================================================
+Function without parameters or result
+==============================================================================
+
+@main()
+fn main() {}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    (annotation
+      name: (identifier))
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block)))
+
+==============================================================================
+Trailing commas
+==============================================================================
+
+fn f(
+  a: i32,
+  b: i32,
+) {}
+
+struct S {
+  a: i32,
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list
+      (parameter
+        name: (identifier)
+        type: (type_path
+          name: (type_identifier)))
+      (parameter
+        name: (identifier)
+        type: (type_path
+          name: (type_identifier))))
+    body: (stmt_block))
+  (struct_declaration
+    name: (type_identifier)
+    (struct_field
+      name: (field_identifier)
+      type: (type_path
+        name: (type_identifier)))))

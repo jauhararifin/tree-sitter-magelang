@@ -3,15 +3,20 @@
   "version": "0.0.1",
   "description": "magelang grammar for tree-sitter",
   "main": "bindings/node",
+  "license": "MIT",
   "keywords": [
     "parsing",
-    "incremental"
+    "incremental",
+    "magelang"
   ],
   "tree-sitter": [
     {
       "scope": "source.mg",
       "highlights": [
         "queries/highlights.scm"
+      ],
+      "locals": [
+        "queries/locals.scm"
       ],
       "file-types": [
         "mg"
@@ -25,6 +30,7 @@
     "tree-sitter-cli": "^0.20.8"
   },
   "scripts": {
-    "test": "tree-sitter test"
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter generate && tree-sitter test && tree-sitter parse -q example-file.mg"
   }
 }

@@ -1,0 +1,479 @@
+==============================================================================
+Paths
+==============================================================================
+
+fn f() {
+  let a = local;
+  let b = pkg::item;
+  let c = generic::<i32>();
+  let d = pkg::generic::<i32, u8>();
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (value_path
+          name: (identifier)))
+      (let_declaration
+        name: (identifier)
+        value: (value_path
+          package: (identifier)
+          name: (identifier)))
+      (let_declaration
+        name: (identifier)
+        value: (call_expr
+          function: (value_path
+            name: (identifier)
+            type_arguments: (type_arguments
+              (type_path
+                name: (type_identifier))))
+          arguments: (argument_list)))
+      (let_declaration
+        name: (identifier)
+        value: (call_expr
+          function: (value_path
+            package: (identifier)
+            name: (identifier)
+            type_arguments: (type_arguments
+              (type_path
+                name: (type_identifier))
+              (type_path
+                name: (type_identifier))))
+          arguments: (argument_list))))))
+
+==============================================================================
+Call and index
+==============================================================================
+
+fn f() {
+  g();
+  g(1, 2);
+  g(1, 2,);
+  arr[0];
+  arr[i + 1].*;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (stmt_expr
+        (call_expr
+          function: (value_path
+            name: (identifier))
+          arguments: (argument_list)))
+      (stmt_expr
+        (call_expr
+          function: (value_path
+            name: (identifier))
+          arguments: (argument_list
+            (num_literal)
+            (num_literal))))
+      (stmt_expr
+        (call_expr
+          function: (value_path
+            name: (identifier))
+          arguments: (argument_list
+            (num_literal)
+            (num_literal))))
+      (stmt_expr
+        (index_expr
+          array: (value_path
+            name: (identifier))
+          index: (num_literal)))
+      (stmt_expr
+        (deref_expr
+          value: (index_expr
+            array: (value_path
+              name: (identifier))
+            index: (bin_expr
+              left: (value_path
+                name: (identifier))
+              right: (num_literal))))))))
+
+==============================================================================
+Selection and dereference
+==============================================================================
+
+fn f() {
+  a.b.c;
+  p.*;
+  p.a.*;
+  p.a.*.b;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (stmt_expr
+        (selection_expr
+          value: (selection_expr
+            value: (value_path
+              name: (identifier))
+            field: (field_identifier))
+          field: (field_identifier)))
+      (stmt_expr
+        (deref_expr
+          value: (value_path
+            name: (identifier))))
+      (stmt_expr
+        (deref_expr
+          value: (selection_expr
+            value: (value_path
+              name: (identifier))
+            field: (field_identifier))))
+      (stmt_expr
+        (selection_expr
+          value: (deref_expr
+            value: (selection_expr
+              value: (value_path
+                name: (identifier))
+              field: (field_identifier)))
+          field: (field_identifier))))))
+
+==============================================================================
+Binary operator precedence
+==============================================================================
+
+fn f() {
+  let a = 1 + 2 * 3;
+  let b = 1 * 2 + 3;
+  let c = a || b && c;
+  let d = a | b ^ c & d;
+  let e = a == b < c << d;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (num_literal)
+          right: (bin_expr
+            left: (num_literal)
+            right: (num_literal))))
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (bin_expr
+            left: (num_literal)
+            right: (num_literal))
+          right: (num_literal)))
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (value_path
+            name: (identifier))
+          right: (bin_expr
+            left: (value_path
+              name: (identifier))
+            right: (value_path
+              name: (identifier)))))
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (value_path
+            name: (identifier))
+          right: (bin_expr
+            left: (value_path
+              name: (identifier))
+            right: (bin_expr
+              left: (value_path
+                name: (identifier))
+              right: (value_path
+                name: (identifier))))))
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (value_path
+            name: (identifier))
+          right: (bin_expr
+            left: (value_path
+              name: (identifier))
+            right: (bin_expr
+              left: (value_path
+                name: (identifier))
+              right: (value_path
+                name: (identifier)))))))))
+
+==============================================================================
+Unary operators
+==============================================================================
+
+fn f() {
+  let a = -x;
+  let b = +x;
+  let c = ~x;
+  let d = !x;
+  let e = !!x;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (unary_expr
+          operand: (value_path
+            name: (identifier))))
+      (let_declaration
+        name: (identifier)
+        value: (unary_expr
+          operand: (value_path
+            name: (identifier))))
+      (let_declaration
+        name: (identifier)
+        value: (unary_expr
+          operand: (value_path
+            name: (identifier))))
+      (let_declaration
+        name: (identifier)
+        value: (unary_expr
+          operand: (value_path
+            name: (identifier))))
+      (let_declaration
+        name: (identifier)
+        value: (unary_expr
+          operand: (unary_expr
+            operand: (value_path
+              name: (identifier))))))))
+
+==============================================================================
+Cast binds tighter than binary, looser than unary
+==============================================================================
+
+fn f() {
+  let a = -x as i32;
+  let b = x as i32 + 1;
+  let c = x as *Foo;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (cast_expr
+          value: (unary_expr
+            operand: (value_path
+              name: (identifier)))
+          type: (type_path
+            name: (type_identifier))))
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (cast_expr
+            value: (value_path
+              name: (identifier))
+            type: (type_path
+              name: (type_identifier)))
+          right: (num_literal)))
+      (let_declaration
+        name: (identifier)
+        value: (cast_expr
+          value: (value_path
+            name: (identifier))
+          type: (type_ptr
+            type: (type_path
+              name: (type_identifier))))))))
+
+==============================================================================
+Grouping
+==============================================================================
+
+fn f() {
+  let a = (1 + 2) * 3;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (group_expr
+            (bin_expr
+              left: (num_literal)
+              right: (num_literal)))
+          right: (num_literal))))))
+
+==============================================================================
+Struct literal
+==============================================================================
+
+fn f() {
+  let a = Pair{a: 1, b: 2};
+  let b = Pair{};
+  let c = pkg::Pair{a: 1,};
+  let d = Pair::<i32, i32>{a: 1, b: 2};
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (struct_literal
+          type: (value_path
+            name: (identifier))
+          (field_initializer
+            name: (field_identifier)
+            value: (num_literal))
+          (field_initializer
+            name: (field_identifier)
+            value: (num_literal))))
+      (let_declaration
+        name: (identifier)
+        value: (struct_literal
+          type: (value_path
+            name: (identifier))))
+      (let_declaration
+        name: (identifier)
+        value: (struct_literal
+          type: (value_path
+            package: (identifier)
+            name: (identifier))
+          (field_initializer
+            name: (field_identifier)
+            value: (num_literal))))
+      (let_declaration
+        name: (identifier)
+        value: (struct_literal
+          type: (value_path
+            name: (identifier)
+            type_arguments: (type_arguments
+              (type_path
+                name: (type_identifier))
+              (type_path
+                name: (type_identifier))))
+          (field_initializer
+            name: (field_identifier)
+            value: (num_literal))
+          (field_initializer
+            name: (field_identifier)
+            value: (num_literal)))))))
+
+==============================================================================
+Struct literal as a binary operand
+==============================================================================
+
+fn f() {
+  let a = flag || Pair{a: 1}.a;
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (bin_expr
+          left: (value_path
+            name: (identifier))
+          right: (selection_expr
+            value: (struct_literal
+              type: (value_path
+                name: (identifier))
+              (field_initializer
+                name: (field_identifier)
+                value: (num_literal)))
+            field: (field_identifier)))))))
+
+==============================================================================
+A brace after a condition opens a block, not a struct literal
+==============================================================================
+
+fn f() {
+  if cond {}
+  while cond {}
+  for ; cond; {}
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (stmt_if
+        condition: (value_path
+          name: (identifier))
+        consequence: (stmt_block))
+      (stmt_while
+        condition: (value_path
+          name: (identifier))
+        body: (stmt_block))
+      (stmt_for
+        condition: (value_path
+          name: (identifier))
+        body: (stmt_block)))))
+
+==============================================================================
+Nested generic arguments
+==============================================================================
+
+fn f() {
+  let a = mem::alloc::<Vector<Vector<i32>>>();
+}
+
+------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    name: (identifier)
+    parameters: (parameter_list)
+    body: (stmt_block
+      (let_declaration
+        name: (identifier)
+        value: (call_expr
+          function: (value_path
+            package: (identifier)
+            name: (identifier)
+            type_arguments: (type_arguments
+              (type_path
+                name: (type_identifier)
+                type_arguments: (type_arguments
+                  (type_path
+                    name: (type_identifier)
+                    type_arguments: (type_arguments
+                      (type_path
+                        name: (type_identifier))))))))
+          arguments: (argument_list))))))

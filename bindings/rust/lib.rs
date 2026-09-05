@@ -33,12 +33,11 @@ pub fn language() -> Language {
 /// [`node-types.json`]: https://tree-sitter.github.io/tree-sitter/using-parsers#static-node-types
 pub const NODE_TYPES: &'static str = include_str!("../../src/node-types.json");
 
-// Uncomment these to include any queries that this grammar contains
+/// The syntax highlighting query for this grammar.
+pub const HIGHLIGHTS_QUERY: &'static str = include_str!("../../queries/highlights.scm");
 
-// pub const HIGHLIGHTS_QUERY: &'static str = include_str!("../../queries/highlights.scm");
-// pub const INJECTIONS_QUERY: &'static str = include_str!("../../queries/injections.scm");
-// pub const LOCALS_QUERY: &'static str = include_str!("../../queries/locals.scm");
-// pub const TAGS_QUERY: &'static str = include_str!("../../queries/tags.scm");
+/// The local variable query for this grammar.
+pub const LOCALS_QUERY: &'static str = include_str!("../../queries/locals.scm");
 
 #[cfg(test)]
 mod tests {
@@ -48,5 +47,27 @@ mod tests {
         parser
             .set_language(super::language())
             .expect("Error loading magelang language");
+    }
+
+    #[test]
+    fn test_can_parse_example_file() {
+        let mut parser = tree_sitter::Parser::new();
+        parser
+            .set_language(super::language())
+            .expect("Error loading magelang language");
+
+        let source = include_str!("../../example-file.mg");
+        let tree = parser.parse(source, None).unwrap();
+        assert!(
+            !tree.root_node().has_error(),
+            "example-file.mg should parse without errors"
+        );
+    }
+
+    #[test]
+    fn test_queries_are_valid() {
+        let language = super::language();
+        tree_sitter::Query::new(language, super::HIGHLIGHTS_QUERY).expect("invalid highlights.scm");
+        tree_sitter::Query::new(language, super::LOCALS_QUERY).expect("invalid locals.scm");
     }
 }

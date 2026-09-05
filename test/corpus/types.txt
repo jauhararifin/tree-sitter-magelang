@@ -1,0 +1,188 @@
+==============================================================================
+Named and qualified types
+==============================================================================
+
+let a: i32;
+let b: pkg::Foo;
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    type: (type_path
+      name: (type_identifier)))
+  (let_declaration
+    name: (identifier)
+    type: (type_path
+      package: (identifier)
+      name: (type_identifier))))
+
+==============================================================================
+Generic types
+==============================================================================
+
+let a: Vector<u8>;
+let b: pkg::Map<Vector<u8>, i32>;
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    type: (type_path
+      name: (type_identifier)
+      type_arguments: (type_arguments
+        (type_path
+          name: (type_identifier)))))
+  (let_declaration
+    name: (identifier)
+    type: (type_path
+      package: (identifier)
+      name: (type_identifier)
+      type_arguments: (type_arguments
+        (type_path
+          name: (type_identifier)
+          type_arguments: (type_arguments
+            (type_path
+              name: (type_identifier))))
+        (type_path
+          name: (type_identifier))))))
+
+==============================================================================
+Pointer types
+==============================================================================
+
+let a: *i32;
+let b: **i32;
+let c: [*]u8;
+let d: [*][*]u8;
+let e: *Vector<u8>;
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    type: (type_ptr
+      type: (type_path
+        name: (type_identifier))))
+  (let_declaration
+    name: (identifier)
+    type: (type_ptr
+      type: (type_ptr
+        type: (type_path
+          name: (type_identifier)))))
+  (let_declaration
+    name: (identifier)
+    type: (type_array_ptr
+      type: (type_path
+        name: (type_identifier))))
+  (let_declaration
+    name: (identifier)
+    type: (type_array_ptr
+      type: (type_array_ptr
+        type: (type_path
+          name: (type_identifier)))))
+  (let_declaration
+    name: (identifier)
+    type: (type_ptr
+      type: (type_path
+        name: (type_identifier)
+        type_arguments: (type_arguments
+          (type_path
+            name: (type_identifier)))))))
+
+==============================================================================
+Function types
+==============================================================================
+
+let a: fn();
+let b: fn(): i32;
+let c: fn(i32, i64): i32;
+let d: fn(a: i32, b: i64): i32;
+let e: fn(a: i32, i64);
+let f: *fn(): *i32;
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    type: (type_fn
+      parameters: (func_type_parameter_list)))
+  (let_declaration
+    name: (identifier)
+    type: (type_fn
+      parameters: (func_type_parameter_list)
+      result: (type_path
+        name: (type_identifier))))
+  (let_declaration
+    name: (identifier)
+    type: (type_fn
+      parameters: (func_type_parameter_list
+        (func_type_parameter
+          type: (type_path
+            name: (type_identifier)))
+        (func_type_parameter
+          type: (type_path
+            name: (type_identifier))))
+      result: (type_path
+        name: (type_identifier))))
+  (let_declaration
+    name: (identifier)
+    type: (type_fn
+      parameters: (func_type_parameter_list
+        (func_type_parameter
+          name: (identifier)
+          type: (type_path
+            name: (type_identifier)))
+        (func_type_parameter
+          name: (identifier)
+          type: (type_path
+            name: (type_identifier))))
+      result: (type_path
+        name: (type_identifier))))
+  (let_declaration
+    name: (identifier)
+    type: (type_fn
+      parameters: (func_type_parameter_list
+        (func_type_parameter
+          name: (identifier)
+          type: (type_path
+            name: (type_identifier)))
+        (func_type_parameter
+          type: (type_path
+            name: (type_identifier))))))
+  (let_declaration
+    name: (identifier)
+    type: (type_ptr
+      type: (type_fn
+        parameters: (func_type_parameter_list)
+        result: (type_ptr
+          type: (type_path
+            name: (type_identifier)))))))
+
+==============================================================================
+Grouped type
+==============================================================================
+
+let a: (i32);
+let b: *(fn(): i32);
+
+------------------------------------------------------------------------------
+
+(source_file
+  (let_declaration
+    name: (identifier)
+    type: (type_group
+      (type_path
+        name: (type_identifier))))
+  (let_declaration
+    name: (identifier)
+    type: (type_ptr
+      type: (type_group
+        (type_fn
+          parameters: (func_type_parameter_list)
+          result: (type_path
+            name: (type_identifier)))))))
