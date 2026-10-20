@@ -13,6 +13,9 @@
 (struct_declaration
   name: (type_identifier) @local.definition.type)
 
+(type_alias_declaration
+  name: (type_identifier) @local.definition.type)
+
 (struct_field
   name: (field_identifier) @local.definition.field)
 
@@ -25,11 +28,11 @@
 (parameter
   name: (identifier) @local.definition.parameter)
 
-(let_declaration
+(global_var_declaration
+  name: (identifier) @local.definition.var)
+
+(var_declaration
   name: (identifier) @local.definition.var)
 
 (value_path
   name: (identifier) @local.reference)
-
-(type_path
-  name: (type_identifier) @local.reference)

@@ -10,26 +10,32 @@ compiler. Where the two could disagree, the compiler is authoritative.
 
 | Area | Syntax |
 | --- | --- |
-| Items | `import`, `struct` (with type parameters), global `let`, `fn` (with type parameters, with or without a body) |
+| Items | `import`, `type` aliases, `struct`, global `var`, and `fn`; declarations and struct fields may be `pub` |
 | Annotations | `@name("arg", "arg")` on any item |
-| Statements | blocks, `let`, assignment, `if` / `else if` / `else`, `while`, `for`, `defer`, `break`, `continue`, `return`, expression statements |
+| Statements | blocks, `var`, assignment, `if` / `else if` / `else`, `while`, `for`, `defer`, `break`, `continue`, `return`, expression statements |
 | Assignment | `=` plus `+= -= *= /= %= &= \|= ^= <<= >>= &&= \|\|=` |
-| Expressions | paths (`pkg::name`, `name::<T>`), calls, indexing, field selection, dereference (`p.*`), casts (`as`), unary and binary operators, grouping, struct literals |
-| Types | named and qualified paths, generic arguments, `*T`, `[*]T`, `fn(a: T, U): V`, grouping |
+| Expressions | dot selection (`pkg.name`), bracket application (`value[index]` or `name[T]`), calls, tuple selection (`value.0`), dereference (`p.*`), casts, unary and binary operators, grouping, tuples, struct literals |
+| Types | ordinary, grouped, and tuple expressions plus `*T`, `[*]T`, `*[T]`, and `fn(a: T, U): V` |
 | Literals | decimal / `0b` / `0o` / `0x` integers with `_` separators, floats with fractions and exponents, strings and chars with escape sequences, `true`, `false`, `null` |
 | Comments | `//` to end of line |
 
-### Two notes on the grammar
+### Notes on the grammar
+
+**Unified expressions and types.** The compiler uses the same expression AST
+for values and types. Dot selection is used for packages and fields, while a
+bracket expression can be either indexing or generic instantiation; semantics
+decide which. The grammar therefore gives `array[i]` and `alloc[T]` the same
+`bracket_expr` shape. Parenthesized comma lists are `tuple_expr` nodes and a
+numeric selection such as `pair.0` is a `tuple_selection_expr`.
 
 **Struct literals versus blocks.** The compiler threads an `allow_struct_lit`
 flag through expression parsing so that the `{` after `if x`, `while x` and a
 `for` header opens a block rather than a struct literal. The grammar mirrors
-this exactly: `grammar.js` generates the expression rules twice, once
-unrestricted and once as hidden `_*_ns` rules that cannot end in a struct
-literal. The `_ns` rules are aliased back to the public node names, so the parse
-tree looks the same either way. Bracketed positions — parentheses, call
-arguments, index subscripts, struct literal values — reset to the unrestricted
-grammar, which keeps `if f(Foo{a: 1}) {}` working.
+this by generating the expression rules twice. Hidden `_*_ns` rules cannot end
+in a struct literal and are aliased back to the public node names, so both
+variants have the same tree shape. Parentheses, call arguments, bracket
+arguments, and struct field values reset to the unrestricted grammar, which
+keeps `if f(Foo{value: 1}) {}` working.
 
 **Strings are not newline terminated.** `scan_string_internal` reads until the
 closing quote or the end of the file, so an unterminated string swallows the
@@ -37,17 +43,18 @@ rest of the file here too. That matches what the compiler reports.
 
 ## Node names
 
-Named nodes follow the compiler's own vocabulary: `import_declaration`,
-`struct_declaration`, `struct_field`, `let_declaration`, `func_declaration`,
+Named nodes follow the compiler's vocabulary: `import_declaration`,
+`type_alias_declaration`, `struct_declaration`, `struct_field`,
+`global_var_declaration`, `var_declaration`, `func_declaration`,
 `parameter_list`, `parameter`, `type_parameters`; `stmt_block`, `stmt_if`,
 `stmt_while`, `stmt_for`, `stmt_defer`, `stmt_return`, `stmt_break`,
-`stmt_continue`, `stmt_assignment`, `stmt_expr`; `type_path`, `type_ptr`,
-`type_array_ptr`, `type_fn`, `type_group`, `type_arguments`; `value_path`,
-`bin_expr`, `unary_expr`, `cast_expr`, `call_expr`, `argument_list`,
-`index_expr`, `selection_expr`, `deref_expr`, `group_expr`, `struct_literal`,
-`field_initializer`.
+`stmt_continue`, `stmt_assignment`, `stmt_expr`; `type_ptr`, `type_array_ptr`,
+`type_slice_ptr`, `type_fn`; `value_path`, `bin_expr`, `unary_expr`,
+`cast_expr`, `call_expr`, `argument_list`, `bracket_expr`, `selection_expr`,
+`tuple_selection_expr`, `deref_expr`, `group_expr`, `tuple_expr`,
+`struct_literal`, `field_initializer`.
 
-`_item`, `_statement`, `_type_expr` and `_value_expr` are supertypes, so
+`_item`, `_statement`, and `_value_expr` are supertypes, so
 `src/node-types.json` lists what can appear in each position.
 
 ## Installing in Neovim

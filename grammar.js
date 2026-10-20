@@ -9,7 +9,7 @@
 // Binary operator precedences, lowest binding first. The order matches
 // `BINOP_PRECEDENCE` in magelang_syntax/src/parser.rs. `cast` binds tighter
 // than every binary operator, `unary` tighter than `cast`, and the postfix
-// operators (call, index, selection, deref) tighter than everything else.
+// operators bind tighter than everything else.
 const PREC = {
   or: 1,
   and: 2,
@@ -66,16 +66,13 @@ function commaSep(rule) {
  * The compiler threads an `allow_struct_lit` flag through expression parsing so
  * that the `{` after `if x`, `while x` and a `for` header is unambiguously the
  * start of a block rather than the start of a struct literal. This function is
- * called twice to produce the two matching expression grammars:
+ * called twice to produce two matching expression grammars. The hidden
+ * `_*_ns` rules cannot end in a struct literal and are aliased back to the
+ * public node names, so both variants produce the same tree shape.
  *
- *   - `noStruct === false` produces the public rules (`bin_expr`, `call_expr`, ...).
- *   - `noStruct === true` produces hidden `_*_ns` twins that cannot end in a
- *     struct literal. They are aliased back to the public names, so the parse
- *     tree looks identical either way.
- *
- * Bracketed positions (parentheses, call arguments, index subscripts, struct
- * literal values) reset to the unrestricted grammar, exactly like the compiler
- * passing `true` back down.
+ * Parentheses, call arguments, bracket arguments and struct field values reset
+ * to the unrestricted grammar, just like the compiler passing `true` back
+ * down.
  *
  * @param {boolean} noStruct
  */
@@ -110,7 +107,7 @@ function expressionRules(noStruct) {
     [PREC.multiplicative, '%'],
   ];
 
-  return {
+  const rules = {
     [noStruct ? '_value_expr_ns' : '_value_expr']: ($) => choice(
       $.value_path,
       $.true,
@@ -120,12 +117,18 @@ function expressionRules(noStruct) {
       $.char_literal,
       $.string_literal,
       $.group_expr,
+      $.tuple_expr,
+      $.type_ptr,
+      $.type_array_ptr,
+      $.type_slice_ptr,
+      $.type_fn,
       ref($, 'bin_expr'),
       ref($, 'unary_expr'),
       ref($, 'cast_expr'),
       ref($, 'call_expr'),
-      ref($, 'index_expr'),
+      ref($, 'bracket_expr'),
       ref($, 'selection_expr'),
+      ref($, 'tuple_selection_expr'),
       ref($, 'deref_expr'),
       ...(noStruct ? [] : [$.struct_literal]),
     ),
@@ -146,7 +149,7 @@ function expressionRules(noStruct) {
     [rule('cast_expr')]: ($) => prec.left(PREC.cast, seq(
       field('value', expr($)),
       'as',
-      field('type', $._type_expr),
+      field('type', $._value_expr_ns),
     )),
 
     [rule('call_expr')]: ($) => prec.left(PREC.postfix, seq(
@@ -154,10 +157,10 @@ function expressionRules(noStruct) {
       field('arguments', $.argument_list),
     )),
 
-    [rule('index_expr')]: ($) => prec.left(PREC.postfix, seq(
-      field('array', expr($)),
+    [rule('bracket_expr')]: ($) => prec.left(PREC.postfix, seq(
+      field('value', expr($)),
       '[',
-      field('index', any($)),
+      commaSep(any($)),
       ']',
     )),
 
@@ -167,12 +170,29 @@ function expressionRules(noStruct) {
       field('field', $._field_identifier),
     )),
 
+    [rule('tuple_selection_expr')]: ($) => prec.left(PREC.postfix, seq(
+      field('value', expr($)),
+      '.',
+      field('index', alias($._tuple_index, $.num_literal)),
+    )),
+
     [rule('deref_expr')]: ($) => prec.left(PREC.postfix, seq(
       field('value', expr($)),
       '.',
       '*',
     )),
   };
+
+  if (!noStruct) {
+    rules.struct_literal = ($) => prec.left(PREC.postfix, seq(
+      field('type', $._value_expr),
+      '{',
+      commaSep($.field_initializer),
+      '}',
+    ));
+  }
+
+  return rules;
 }
 
 module.exports = grammar({
@@ -188,7 +208,6 @@ module.exports = grammar({
   supertypes: ($) => [
     $._item,
     $._statement,
-    $._type_expr,
     $._value_expr,
   ],
 
@@ -201,8 +220,9 @@ module.exports = grammar({
 
     _item: ($) => choice(
       $.import_declaration,
+      $.type_alias_declaration,
       $.struct_declaration,
-      $.let_declaration,
+      $.global_var_declaration,
       $.func_declaration,
     ),
 
@@ -222,8 +242,19 @@ module.exports = grammar({
       ';',
     ),
 
+    type_alias_declaration: ($) => seq(
+      repeat($.annotation),
+      optional('pub'),
+      'type',
+      field('name', $._type_identifier),
+      '=',
+      field('type', $._value_expr_ns),
+      ';',
+    ),
+
     struct_declaration: ($) => seq(
       repeat($.annotation),
+      optional('pub'),
       'struct',
       field('name', $._type_identifier),
       optional(field('type_parameters', $.type_parameters)),
@@ -233,18 +264,31 @@ module.exports = grammar({
     ),
 
     struct_field: ($) => seq(
+      optional('pub'),
       field('name', $._field_identifier),
       ':',
-      field('type', $._type_expr),
+      field('type', $._value_expr_ns),
+    ),
+
+    global_var_declaration: ($) => seq(
+      repeat($.annotation),
+      optional('pub'),
+      'var',
+      field('name', $.identifier),
+      ':',
+      field('type', $._value_expr_ns),
+      optional(seq('=', field('value', $._value_expr))),
+      ';',
     ),
 
     func_declaration: ($) => seq(
       repeat($.annotation),
+      optional('pub'),
       'fn',
       field('name', $.identifier),
       optional(field('type_parameters', $.type_parameters)),
       field('parameters', $.parameter_list),
-      optional(seq(':', field('result', $._type_expr))),
+      optional(seq(':', field('result', $._value_expr_ns))),
       choice(
         ';',
         field('body', $.stmt_block),
@@ -260,13 +304,13 @@ module.exports = grammar({
     parameter: ($) => seq(
       field('name', $.identifier),
       ':',
-      field('type', $._type_expr),
+      field('type', $._value_expr_ns),
     ),
 
     type_parameters: ($) => seq(
-      '<',
+      '[',
       commaSep1($._type_identifier),
-      '>',
+      ']',
     ),
 
     // ------------------------------------------------------------------
@@ -282,7 +326,7 @@ module.exports = grammar({
       $.stmt_continue,
       $.stmt_break,
       $.stmt_return,
-      $.let_declaration,
+      $.var_declaration,
       $.stmt_assignment,
       $.stmt_expr,
     ),
@@ -293,35 +337,31 @@ module.exports = grammar({
       '}',
     ),
 
-    // `let` is both a top level item and a statement. The compiler requires an
-    // explicit type on globals, but sharing one node keeps the tree uniform;
-    // the type checker is the authority on that distinction.
-    let_declaration: ($) => seq(
-      repeat($.annotation),
-      $._let_declarator,
+    var_declaration: ($) => seq(
+      $._var_declarator,
       ';',
     ),
 
-    _let_declarator: ($) => seq(
-      'let',
+    _var_declarator: ($) => seq(
+      'var',
       field('name', $.identifier),
       choice(
         seq(
           ':',
-          field('type', $._type_expr),
+          field('type', $._value_expr_ns),
           optional(seq('=', field('value', $._value_expr))),
         ),
         seq('=', field('value', $._value_expr)),
       ),
     ),
 
-    _let_declarator_ns: ($) => seq(
-      'let',
+    _var_declarator_ns: ($) => seq(
+      'var',
       field('name', $.identifier),
       choice(
         seq(
           ':',
-          field('type', $._type_expr),
+          field('type', $._value_expr_ns),
           optional(seq('=', field('value', $._value_expr_ns))),
         ),
         seq('=', field('value', $._value_expr_ns)),
@@ -372,18 +412,14 @@ module.exports = grammar({
       field('body', $.stmt_block),
     ),
 
-    // The initializer keeps the `;` that terminates it, so it is spelled with
-    // the ordinary statement rules.
     _for_initializer: ($) => choice(
-      $.let_declaration,
+      $.var_declaration,
       $.stmt_assignment,
       $.stmt_expr,
     ),
 
-    // The update is followed by the loop body, so it is unterminated and must
-    // not swallow the body's `{` as a struct literal.
     _for_update: ($) => choice(
-      alias($._let_declarator_ns, $.let_declaration),
+      alias($._var_declarator_ns, $.var_declaration),
       alias($._assignment_ns, $.stmt_assignment),
       $._value_expr_ns,
     ),
@@ -404,48 +440,66 @@ module.exports = grammar({
     ),
 
     // ------------------------------------------------------------------
-    // Type expressions
+    // Expressions (types use the same syntax tree in the compiler)
     // ------------------------------------------------------------------
 
-    _type_expr: ($) => choice(
-      $.type_path,
-      $.type_ptr,
-      $.type_array_ptr,
-      $.type_fn,
-      $.type_group,
+    ...expressionRules(false),
+    ...expressionRules(true),
+
+    group_expr: ($) => seq('(', $._value_expr, ')'),
+
+    tuple_expr: ($) => choice(
+      seq('(', ')'),
+      seq(
+        '(',
+        $._value_expr,
+        ',',
+        optional(seq(
+          $._value_expr,
+          repeat(seq(',', $._value_expr)),
+          optional(','),
+        )),
+        ')',
+      ),
     ),
 
-    // `x as Foo < y` is ambiguous: `<` may open type arguments or be a
-    // comparison. `parse_path_for_type` takes the type arguments greedily, so
-    // the rule is right associative to prefer the shift.
-    type_path: ($) => prec.right(seq(
-      optional(seq(field('package', $.identifier), '::')),
-      field('name', $._type_identifier),
-      optional(field('type_arguments', $.type_arguments)),
-    )),
-
-    type_arguments: ($) => seq(
-      '<',
-      commaSep1($._type_expr),
-      '>',
+    argument_list: ($) => seq(
+      '(',
+      commaSep($._value_expr),
+      ')',
     ),
 
-    type_ptr: ($) => prec.right(seq(
+    value_path: ($) => field('name', $.identifier),
+
+    field_initializer: ($) => seq(
+      field('name', $._field_identifier),
+      ':',
+      field('value', $._value_expr),
+    ),
+
+    type_ptr: ($) => prec.right(PREC.unary, seq(
       '*',
-      field('type', $._type_expr),
+      field('type', $._value_expr_ns),
     )),
 
-    type_array_ptr: ($) => prec.right(seq(
+    type_array_ptr: ($) => prec.right(PREC.unary, seq(
       '[',
       '*',
       ']',
-      field('type', $._type_expr),
+      field('type', $._value_expr_ns),
     )),
 
-    type_fn: ($) => prec.right(seq(
+    type_slice_ptr: ($) => prec.right(PREC.unary, seq(
+      '*',
+      '[',
+      field('type', $._value_expr_ns),
+      ']',
+    )),
+
+    type_fn: ($) => prec.right(PREC.unary, seq(
       'fn',
       field('parameters', $.func_type_parameter_list),
-      optional(seq(':', field('result', $._type_expr))),
+      optional(seq(':', field('result', $._value_expr_ns))),
     )),
 
     func_type_parameter_list: ($) => seq(
@@ -456,43 +510,7 @@ module.exports = grammar({
 
     func_type_parameter: ($) => seq(
       optional(seq(field('name', $.identifier), ':')),
-      field('type', $._type_expr),
-    ),
-
-    type_group: ($) => seq('(', $._type_expr, ')'),
-
-    // ------------------------------------------------------------------
-    // Value expressions
-    // ------------------------------------------------------------------
-
-    ...expressionRules(false),
-    ...expressionRules(true),
-
-    group_expr: ($) => seq('(', $._value_expr, ')'),
-
-    argument_list: ($) => seq(
-      '(',
-      commaSep($._value_expr),
-      ')',
-    ),
-
-    value_path: ($) => seq(
-      optional(seq(field('package', $.identifier), '::')),
-      field('name', $.identifier),
-      optional(seq('::', field('type_arguments', $.type_arguments))),
-    ),
-
-    struct_literal: ($) => prec(PREC.postfix, seq(
-      field('type', $.value_path),
-      '{',
-      commaSep($.field_initializer),
-      '}',
-    )),
-
-    field_initializer: ($) => seq(
-      field('name', $._field_identifier),
-      ':',
-      field('value', $._value_expr),
+      field('type', $._value_expr_ns),
     ),
 
     // ------------------------------------------------------------------
@@ -505,23 +523,24 @@ module.exports = grammar({
 
     _field_identifier: ($) => alias($.identifier, $.field_identifier),
 
+    _tuple_index: (_) => token(/[0-9][0-9_]*/),
+
     true: (_) => 'true',
 
     false: (_) => 'false',
 
     null: (_) => 'null',
 
-    // Mirrors `scan_number_lit`: `0b`/`0o`/`0x` prefixes are lower case only,
-    // `_` may appear anywhere between digits, a fraction needs a leading digit,
-    // and an exponent only accepts a `-` sign.
+    // Prefixes are lower case. The compiler also permits `_` between the
+    // leading zero and the base prefix, and throughout the digits.
     num_literal: (_) => token(choice(
-      seq('0b', /_*[01][01_]*/),
-      seq('0o', /_*[0-7][0-7_]*/),
-      seq('0x', /_*[0-9a-fA-F][0-9a-fA-F_]*/),
+      seq('0', /_*/, 'b', /_*[01][01_]*/),
+      seq('0', /_*/, 'o', /_*[0-7][0-7_]*/),
+      seq('0', /_*/, 'x', /_*[0-9a-fA-F][0-9a-fA-F_]*/),
       seq(
         /[0-9][0-9_]*/,
         optional(seq('.', optional(/[0-9][0-9_]*/))),
-        optional(seq(/[eE]/, optional('-'), /[0-9][0-9_]*/)),
+        optional(seq(/[eE]/, /_*/, optional(seq('-', /_*/)), /[0-9][0-9_]*/)),
       ),
     )),
 
@@ -534,8 +553,8 @@ module.exports = grammar({
       token.immediate('\''),
     ),
 
-    // Magelang strings are not newline terminated: `scan_string_internal` reads
-    // until the closing quote or the end of the file.
+    // Magelang strings are not newline terminated: `scan_string_internal`
+    // reads until the closing quote or the end of the file.
     string_literal: ($) => seq(
       '"',
       repeat(choice(
@@ -545,12 +564,12 @@ module.exports = grammar({
       token.immediate('"'),
     ),
 
-    _string_content: (_) => token.immediate(/[^"\\]+/),
+    _string_content: (_) => token.immediate(prec(1, /[^"\\]+/)),
 
     escape_sequence: (_) => token.immediate(seq(
       '\\',
       choice(
-        /[nrt\\0'"]/,
+        /[nrt\\0'\"]/,
         /x[0-9a-fA-F]{2}/,
       ),
     )),

@@ -1,78 +1,109 @@
-==============================================================================
-Let statement
-==============================================================================
+================================================================================
+Var statement
+================================================================================
 
 fn f() {
-  let a: i32 = 1;
-  let b = 2;
-  let c: i32;
+  var a: i32 = 1;
+  var b = 2;
+  var c: i32;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
-      (let_declaration
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier))
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier))))))
+    (identifier)
+    (parameter_list)
+    (stmt_block
+      (var_declaration
+        (identifier)
+        (value_path
+          (identifier))
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (value_path
+          (identifier))))))
 
-==============================================================================
+================================================================================
+Let is an identifier
+================================================================================
+
+fn f() {
+  var let = 1;
+  let += 1;
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (func_declaration
+    (identifier)
+    (parameter_list)
+    (stmt_block
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (stmt_assignment
+        (value_path
+          (identifier))
+        (num_literal)))))
+
+================================================================================
 Assignment
-==============================================================================
+================================================================================
 
 fn f() {
   a = 1;
   p.x = 2;
   p.* = 3;
   arr[i].* = 4;
+  tuple.0 = 5;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (selection_expr
-          value: (value_path
-            name: (identifier))
-          field: (field_identifier))
-        right: (num_literal))
+        (selection_expr
+          (value_path
+            (identifier))
+          (field_identifier))
+        (num_literal))
       (stmt_assignment
-        left: (deref_expr
-          value: (value_path
-            name: (identifier)))
-        right: (num_literal))
+        (deref_expr
+          (value_path
+            (identifier)))
+        (num_literal))
       (stmt_assignment
-        left: (deref_expr
-          value: (index_expr
-            array: (value_path
-              name: (identifier))
-            index: (value_path
-              name: (identifier))))
-        right: (num_literal)))))
+        (deref_expr
+          (bracket_expr
+            (value_path
+              (identifier))
+            (value_path
+              (identifier))))
+        (num_literal))
+      (stmt_assignment
+        (tuple_selection_expr
+          (value_path
+            (identifier))
+          (num_literal))
+        (num_literal)))))
 
-==============================================================================
+================================================================================
 Compound assignment
-==============================================================================
+================================================================================
 
 fn f() {
   a += 1;
@@ -87,67 +118,82 @@ fn f() {
   a >>= 1;
   b &&= true;
   b ||= false;
+  p.*=value;
+  p.*==value;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (num_literal))
+        (value_path
+          (identifier))
+        (num_literal))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (true))
+        (value_path
+          (identifier))
+        (true))
       (stmt_assignment
-        left: (value_path
-          name: (identifier))
-        right: (false)))))
+        (value_path
+          (identifier))
+        (false))
+      (stmt_assignment
+        (deref_expr
+          (value_path
+            (identifier)))
+        (value_path
+          (identifier)))
+      (stmt_expr
+        (bin_expr
+          (deref_expr
+            (value_path
+              (identifier)))
+          (value_path
+            (identifier)))))))
 
-==============================================================================
+================================================================================
 If statement
-==============================================================================
+================================================================================
 
 fn f() {
   if a < 10 {
@@ -159,69 +205,73 @@ fn f() {
   }
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_if
-        condition: (bin_expr
-          left: (value_path
-            name: (identifier))
-          right: (num_literal))
-        consequence: (stmt_block
+        (bin_expr
+          (value_path
+            (identifier))
+          (num_literal))
+        (stmt_block
           (stmt_expr
             (call_expr
-              function: (value_path
-                name: (identifier))
-              arguments: (argument_list))))
-        alternative: (stmt_if
-          condition: (bin_expr
-            left: (value_path
-              name: (identifier))
-            right: (num_literal))
-          consequence: (stmt_block
+              (value_path
+                (identifier))
+              (argument_list))))
+        (stmt_if
+          (bin_expr
+            (value_path
+              (identifier))
+            (num_literal))
+          (stmt_block
             (stmt_expr
               (call_expr
-                function: (value_path
-                  name: (identifier))
-                arguments: (argument_list))))
-          alternative: (stmt_block
+                (value_path
+                  (identifier))
+                (argument_list))))
+          (stmt_block
             (stmt_expr
               (call_expr
-                function: (value_path
-                  name: (identifier))
-                arguments: (argument_list)))))))))
+                (value_path
+                  (identifier))
+                (argument_list)))))))))
 
-==============================================================================
-If with a call in the condition
-==============================================================================
+================================================================================
+If with a call and struct literal in the condition
+================================================================================
 
 fn f() {
-  if is_ready(x) {}
+  if is_ready(Item{value: 1}) {}
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_if
-        condition: (call_expr
-          function: (value_path
-            name: (identifier))
-          arguments: (argument_list
-            (value_path
-              name: (identifier))))
-        consequence: (stmt_block)))))
+        (call_expr
+          (value_path
+            (identifier))
+          (argument_list
+            (struct_literal
+              (value_path
+                (identifier))
+              (field_initializer
+                (field_identifier)
+                (num_literal)))))
+        (stmt_block)))))
 
-==============================================================================
+================================================================================
 While statement
-==============================================================================
+================================================================================
 
 fn f() {
   while b != 0 {
@@ -229,74 +279,74 @@ fn f() {
   }
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_while
-        condition: (bin_expr
-          left: (value_path
-            name: (identifier))
-          right: (num_literal))
-        body: (stmt_block
+        (bin_expr
+          (value_path
+            (identifier))
+          (num_literal))
+        (stmt_block
           (stmt_assignment
-            left: (value_path
-              name: (identifier))
-            right: (bin_expr
-              left: (value_path
-                name: (identifier))
-              right: (num_literal))))))))
+            (value_path
+              (identifier))
+            (bin_expr
+              (value_path
+                (identifier))
+              (num_literal))))))))
 
-==============================================================================
+================================================================================
 For statement
-==============================================================================
+================================================================================
 
 fn f() {
-  for let i: i32 = 0; i < 5; i = i + 1 {
+  for var i: i32 = 0; i < 5; i = i + 1 {
     sum = sum + i;
   }
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_for
-        initializer: (let_declaration
-          name: (identifier)
-          type: (type_path
-            name: (type_identifier))
-          value: (num_literal))
-        condition: (bin_expr
-          left: (value_path
-            name: (identifier))
-          right: (num_literal))
-        update: (stmt_assignment
-          left: (value_path
-            name: (identifier))
-          right: (bin_expr
-            left: (value_path
-              name: (identifier))
-            right: (num_literal)))
-        body: (stmt_block
+        (var_declaration
+          (identifier)
+          (value_path
+            (identifier))
+          (num_literal))
+        (bin_expr
+          (value_path
+            (identifier))
+          (num_literal))
+        (stmt_assignment
+          (value_path
+            (identifier))
+          (bin_expr
+            (value_path
+              (identifier))
+            (num_literal)))
+        (stmt_block
           (stmt_assignment
-            left: (value_path
-              name: (identifier))
-            right: (bin_expr
-              left: (value_path
-                name: (identifier))
-              right: (value_path
-                name: (identifier)))))))))
+            (value_path
+              (identifier))
+            (bin_expr
+              (value_path
+                (identifier))
+              (value_path
+                (identifier)))))))))
 
-==============================================================================
+================================================================================
 For statement with empty clauses
-==============================================================================
+================================================================================
 
 fn f() {
   for ; ; {
@@ -304,132 +354,145 @@ fn f() {
   }
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_for
-        body: (stmt_block
+        (stmt_block
           (stmt_break))))))
 
-==============================================================================
+================================================================================
 For statement with a struct literal initializer
-==============================================================================
+================================================================================
 
 fn f() {
-  for let b = Big{x: 0, y: 3}; b.x < b.y; b.x = b.x + 1 {}
+  for var b = Bounds{min: 0, max: 3}; b.min < b.max; b.min = b.min + 1 {}
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_for
-        initializer: (let_declaration
-          name: (identifier)
-          value: (struct_literal
-            type: (value_path
-              name: (identifier))
+        (var_declaration
+          (identifier)
+          (struct_literal
+            (value_path
+              (identifier))
             (field_initializer
-              name: (field_identifier)
-              value: (num_literal))
+              (field_identifier)
+              (num_literal))
             (field_initializer
-              name: (field_identifier)
-              value: (num_literal))))
-        condition: (bin_expr
-          left: (selection_expr
-            value: (value_path
-              name: (identifier))
-            field: (field_identifier))
-          right: (selection_expr
-            value: (value_path
-              name: (identifier))
-            field: (field_identifier)))
-        update: (stmt_assignment
-          left: (selection_expr
-            value: (value_path
-              name: (identifier))
-            field: (field_identifier))
-          right: (bin_expr
-            left: (selection_expr
-              value: (value_path
-                name: (identifier))
-              field: (field_identifier))
-            right: (num_literal)))
-        body: (stmt_block)))))
+              (field_identifier)
+              (num_literal))))
+        (bin_expr
+          (selection_expr
+            (value_path
+              (identifier))
+            (field_identifier))
+          (selection_expr
+            (value_path
+              (identifier))
+            (field_identifier)))
+        (stmt_assignment
+          (selection_expr
+            (value_path
+              (identifier))
+            (field_identifier))
+          (bin_expr
+            (selection_expr
+              (value_path
+                (identifier))
+              (field_identifier))
+            (num_literal)))
+        (stmt_block)))))
 
-==============================================================================
+================================================================================
 For statement with an expression update
-==============================================================================
+================================================================================
 
 fn f() {
-  for let i = 0; i < 3; step() {}
+  for var i = 0; i < 3; step() {}
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_for
-        initializer: (let_declaration
-          name: (identifier)
-          value: (num_literal))
-        condition: (bin_expr
-          left: (value_path
-            name: (identifier))
-          right: (num_literal))
-        update: (call_expr
-          function: (value_path
-            name: (identifier))
-          arguments: (argument_list))
-        body: (stmt_block)))))
+        (var_declaration
+          (identifier)
+          (num_literal))
+        (bin_expr
+          (value_path
+            (identifier))
+          (num_literal))
+        (call_expr
+          (value_path
+            (identifier))
+          (argument_list))
+        (stmt_block)))))
 
-==============================================================================
+================================================================================
 Defer statement
-==============================================================================
+================================================================================
 
 fn f() {
   defer close(fd);
   defer {
     cleanup();
   }
+  defer if ready {
+    finish();
+  }
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_defer
-        body: (stmt_expr
+        (stmt_expr
           (call_expr
-            function: (value_path
-              name: (identifier))
-            arguments: (argument_list
+            (value_path
+              (identifier))
+            (argument_list
               (value_path
-                name: (identifier))))))
+                (identifier))))))
       (stmt_defer
-        body: (stmt_block
+        (stmt_block
           (stmt_expr
             (call_expr
-              function: (value_path
-                name: (identifier))
-              arguments: (argument_list))))))))
+              (value_path
+                (identifier))
+              (argument_list)))))
+      (stmt_defer
+        (stmt_if
+          (value_path
+            (identifier))
+          (stmt_block
+            (stmt_expr
+              (call_expr
+                (value_path
+                  (identifier))
+                (argument_list)))))))))
 
-==============================================================================
+================================================================================
 Break, continue and return
-==============================================================================
+================================================================================
 
 fn f(): i32 {
   while true {
@@ -439,43 +502,43 @@ fn f(): i32 {
   return 1;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    result: (type_path
-      name: (type_identifier))
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (value_path
+      (identifier))
+    (stmt_block
       (stmt_while
-        condition: (true)
-        body: (stmt_block
+        (true)
+        (stmt_block
           (stmt_continue)
           (stmt_break)))
       (stmt_return
-        value: (num_literal)))))
+        (num_literal)))))
 
-==============================================================================
+================================================================================
 Bare return
-==============================================================================
+================================================================================
 
 fn f() {
   return;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_return))))
 
-==============================================================================
+================================================================================
 Nested block
-==============================================================================
+================================================================================
 
 fn f() {
   {
@@ -483,16 +546,16 @@ fn f() {
   }
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (stmt_block
         (stmt_expr
           (call_expr
-            function: (value_path
-              name: (identifier))
-            arguments: (argument_list)))))))
+            (value_path
+              (identifier))
+            (argument_list)))))))

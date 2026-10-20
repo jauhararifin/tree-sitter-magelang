@@ -4,30 +4,23 @@
 import fmt "std/fmt";
 import mem "std/mem";
 
-// Globals need an explicit type; the value is optional.
-let stdout: i32 = 1;
-let counter: i64;
+pub type Count = usize;
+type NumberPair = (i32, i32);
 
-struct IoVec {
-  p: [*]u8,
-  len: usize,
+// Globals require an explicit type; the value is optional.
+pub var completed: Count = 0;
+var last_total: i32;
+
+pub struct Pair[T, U] {
+  pub first: T,
+  pub second: U,
 }
-
-struct Pair<T, U> {
-  a: T,
-  b: U,
-}
-
-@wasm_import("env", "write_iovec")
-fn write_iovec(fd: i32, iovec: *IoVec, count: i32, n_written: *i32): i32;
 
 fn sum_to(n: i32): i32 {
-  let total: i32 = 0;
-  // for loops take an initializer, a condition and an update
-  for let i: i32 = 0; i < n; i += 1 {
-    if i % 15 == 0 {
-      continue;
-    } else if i > 1000 {
+  var total: i32 = 0;
+  // For loops take an initializer, a condition and an update.
+  for var i: i32 = 0; i < n; i += 1 {
+    if i > 1000 {
       break;
     }
     total += i;
@@ -35,45 +28,50 @@ fn sum_to(n: i32): i32 {
   return total;
 }
 
-fn swap<T>(a: *T, b: *T) {
-  let tmp: T = a.*;
+fn swap[T](a: *T, b: *T) {
+  var temporary: T = a.*;
   a.* = b.*;
-  b.* = tmp;
+  b.* = temporary;
 }
 
-fn apply(values: [*]i32, len: usize, f: fn(v: i32): i32) {
-  let i: usize = 0;
-  while i < len {
-    values[i].* = f(values[i].*);
-    i = i + 1;
+fn apply(values: *[i32], transform: fn(value: i32): i32) {
+  var i: usize = 0;
+  while i < values.len {
+    values[i].* = transform(values[i].*);
+    i += 1;
   }
 }
 
 @main()
 @wasm_export("_start")
 fn main() {
-  // defer runs at the end of the enclosing scope
-  defer fmt::print_str("done\n");
+  defer fmt.print_str("done\n");
 
-  let p = mem::alloc::<Pair<i32, i32>>();
-  p.* = Pair::<i32, i32>{a: 1, b: 2};
-  swap::<i32>(p.a, p.b);
+  var pair = mem.alloc[Pair[i32, i32]]();
+  pair.* = Pair[i32, i32]{first: 1, second: 2};
+  swap[i32](pair.first, pair.second);
 
-  let mask: i32 = 0b1010_1010 | 0o755 & 0xdead_beef ^ 1_000;
-  let ratio: f64 = 3.14e-5 / 2.0;
-  let ch = '\n';
-  let msg = "hello\tworld\x21\n";
+  var numbers: NumberPair = (pair.first.*, pair.second.*);
+  numbers.0 += 10;
+  last_total = sum_to(numbers.0);
 
-  let iovec = 40 as *IoVec;
-  iovec.p.* = msg as [*]u8;
-  iovec.len.* = 13;
-  write_iovec(stdout, iovec, 1, 0 as *i32);
+  var data = mem.alloc_array[i32](3);
+  data[0].* = 1;
+  data[1].* = 2;
+  data[2].* = 3;
+  var values: *[i32] = *[i32]{ptr: data, len: 3};
+  apply(values, sum_to);
 
-  {
-    defer mem::dealloc::<Pair<i32, i32>>(p);
-    fmt::print_i32(sum_to(100) + mask - (~ch as i32) * -1);
+  var mask: i32 = 0b1010_1010 | 0o755 & 0xdead_beef ^ 1_000;
+  var ratio: f64 = 3.14e-5 / 2.0;
+  var ch = '\n';
+  var ok: bool = !(true && false) || null == null;
+  if ok && ratio < 1.0 {
+    fmt.print_i32(last_total + mask - (~ch as i32) * -1);
+    fmt.print_str("\n");
   }
 
-  let ok: bool = !(true && false) || null == null;
-  counter <<= 2;
+  completed += 1;
+  mem.dealloc_array[i32](data);
+  mem.dealloc[Pair[i32, i32]](pair);
 }

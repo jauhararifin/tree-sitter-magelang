@@ -1,205 +1,222 @@
-==============================================================================
+================================================================================
 Integer literals
-==============================================================================
+================================================================================
 
 fn f() {
-  let a = 0;
-  let b = 1234;
-  let c = 1_000_000;
-  let d = 0b1010_1010;
-  let e = 0o755;
-  let f = 0xdead_beef;
+  var a = 0;
+  var b = 1234;
+  var c = 1_000_000;
+  var d = 0b1010_1010;
+  var e = 0o755;
+  var f = 0xdead_beef;
+  var g = 0777;
+  var h = 0__b__1010;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal)))))
+    (identifier)
+    (parameter_list)
+    (stmt_block
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal)))))
 
-==============================================================================
+================================================================================
 Float literals
-==============================================================================
+================================================================================
 
 fn f() {
-  let a = 3.14;
-  let b = 1.;
-  let c = 1e10;
-  let d = 3.14e-5;
-  let e = 1E10;
+  var a = 3.14;
+  var b = 1.;
+  var c = 1e10;
+  var d = 3.14e-5;
+  var e = 1E10;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
-      (let_declaration
-        name: (identifier)
-        value: (num_literal)))))
+    (identifier)
+    (parameter_list)
+    (stmt_block
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal)))))
 
-==============================================================================
+================================================================================
 String literals
-==============================================================================
+================================================================================
 
 fn f() {
-  let a = "hello";
-  let b = "tab\there";
-  let c = "quote\"inside";
-  let d = "hex\x41";
-  let e = "";
+  var a = "hello";
+  var b = "tab\there";
+  var c = "quote\"inside";
+  var d = "hex\x41";
+  var e = "";
+  var f = "// not a comment";
+  var g = "line one
+// still a string";
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
-      (let_declaration
-        name: (identifier)
-        value: (string_literal))
-      (let_declaration
-        name: (identifier)
-        value: (string_literal
+    (identifier)
+    (parameter_list)
+    (stmt_block
+      (var_declaration
+        (identifier)
+        (string_literal))
+      (var_declaration
+        (identifier)
+        (string_literal
           (escape_sequence)))
-      (let_declaration
-        name: (identifier)
-        value: (string_literal
+      (var_declaration
+        (identifier)
+        (string_literal
           (escape_sequence)))
-      (let_declaration
-        name: (identifier)
-        value: (string_literal
+      (var_declaration
+        (identifier)
+        (string_literal
           (escape_sequence)))
-      (let_declaration
-        name: (identifier)
-        value: (string_literal)))))
+      (var_declaration
+        (identifier)
+        (string_literal))
+      (var_declaration
+        (identifier)
+        (string_literal))
+      (var_declaration
+        (identifier)
+        (string_literal)))))
 
-==============================================================================
+================================================================================
 Character literals
-==============================================================================
+================================================================================
 
 fn f() {
-  let a = 'x';
-  let b = '\n';
-  let c = '\\';
-  let d = '\'';
-  let e = '\x41';
-  let f = '0';
+  var a = 'x';
+  var b = '\n';
+  var c = '\\';
+  var d = '\'';
+  var e = '\x41';
+  var f = '0';
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
-      (let_declaration
-        name: (identifier)
-        value: (char_literal))
-      (let_declaration
-        name: (identifier)
-        value: (char_literal
+    (identifier)
+    (parameter_list)
+    (stmt_block
+      (var_declaration
+        (identifier)
+        (char_literal))
+      (var_declaration
+        (identifier)
+        (char_literal
           (escape_sequence)))
-      (let_declaration
-        name: (identifier)
-        value: (char_literal
+      (var_declaration
+        (identifier)
+        (char_literal
           (escape_sequence)))
-      (let_declaration
-        name: (identifier)
-        value: (char_literal
+      (var_declaration
+        (identifier)
+        (char_literal
           (escape_sequence)))
-      (let_declaration
-        name: (identifier)
-        value: (char_literal
+      (var_declaration
+        (identifier)
+        (char_literal
           (escape_sequence)))
-      (let_declaration
-        name: (identifier)
-        value: (char_literal)))))
+      (var_declaration
+        (identifier)
+        (char_literal)))))
 
-==============================================================================
+================================================================================
 Boolean and null literals
-==============================================================================
+================================================================================
 
 fn f() {
-  let a = true;
-  let b = false;
-  let c = null;
+  var a = true;
+  var b = false;
+  var c = null;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
-      (let_declaration
-        name: (identifier)
-        value: (true))
-      (let_declaration
-        name: (identifier)
-        value: (false))
-      (let_declaration
-        name: (identifier)
-        value: (null)))))
+    (identifier)
+    (parameter_list)
+    (stmt_block
+      (var_declaration
+        (identifier)
+        (true))
+      (var_declaration
+        (identifier)
+        (false))
+      (var_declaration
+        (identifier)
+        (null)))))
 
-==============================================================================
+================================================================================
 Comments
-==============================================================================
+================================================================================
 
 // leading comment
 fn f() {
   // inside
-  let a = 1; // trailing
+  var a = 1; // trailing
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (comment)
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block
+    (identifier)
+    (parameter_list)
+    (stmt_block
       (comment)
-      (let_declaration
-        name: (identifier)
-        value: (num_literal))
+      (var_declaration
+        (identifier)
+        (num_literal))
       (comment))))

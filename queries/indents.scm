@@ -8,7 +8,8 @@
   (func_type_parameter_list)
   (argument_list)
   (type_parameters)
-  (type_arguments)
+  (bracket_expr)
+  (tuple_expr)
 ] @indent.begin
 
 [

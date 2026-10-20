@@ -1,283 +1,311 @@
-==============================================================================
+================================================================================
 Import
-==============================================================================
+================================================================================
 
 import fmt "std/fmt";
 import mem "std/mem";
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (import_declaration
-    name: (identifier)
-    path: (string_literal))
+    (identifier)
+    (string_literal))
   (import_declaration
-    name: (identifier)
-    path: (string_literal)))
+    (identifier)
+    (string_literal)))
 
-==============================================================================
+================================================================================
 Annotated import
-==============================================================================
+================================================================================
 
 @wasm_module("env")
 import ext "ext";
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (import_declaration
     (annotation
-      name: (identifier)
+      (identifier)
       (string_literal))
-    name: (identifier)
-    path: (string_literal)))
+    (identifier)
+    (string_literal)))
 
-==============================================================================
+================================================================================
+Type aliases
+================================================================================
+
+type ByteSlice = *[u8];
+pub type Pair = (i32, bool);
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (type_alias_declaration
+    (type_identifier)
+    (type_slice_ptr
+      (value_path
+        (identifier))))
+  (type_alias_declaration
+    (type_identifier)
+    (tuple_expr
+      (value_path
+        (identifier))
+      (value_path
+        (identifier)))))
+
+================================================================================
 Global with type and value
-==============================================================================
+================================================================================
 
-let stdout: i32 = 1;
+var stdout: i32 = 1;
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
-  (let_declaration
-    name: (identifier)
-    type: (type_path
-      name: (type_identifier))
-    value: (num_literal)))
+  (global_var_declaration
+    (identifier)
+    (value_path
+      (identifier))
+    (num_literal)))
 
-==============================================================================
+================================================================================
 Global without value
-==============================================================================
+================================================================================
 
-let counter: i64;
+var counter: i64;
 
-------------------------------------------------------------------------------
-
-(source_file
-  (let_declaration
-    name: (identifier)
-    type: (type_path
-      name: (type_identifier))))
-
-==============================================================================
-Global inferred from value
-==============================================================================
-
-let greeting = "hi";
-
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
-  (let_declaration
-    name: (identifier)
-    value: (string_literal)))
+  (global_var_declaration
+    (identifier)
+    (value_path
+      (identifier))))
 
-==============================================================================
-Struct
-==============================================================================
+================================================================================
+Annotated public global
+================================================================================
 
-struct IoVec {
-  p: [*]u8,
+@link_name("shared_count")
+pub var count: usize = 0;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (global_var_declaration
+    (annotation
+      (identifier)
+      (string_literal))
+    (identifier)
+    (value_path
+      (identifier))
+    (num_literal)))
+
+================================================================================
+Struct and field visibility
+================================================================================
+
+pub struct IoVec {
+  pub ptr: [*]u8,
   len: usize,
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (struct_declaration
-    name: (type_identifier)
+    (type_identifier)
     (struct_field
-      name: (field_identifier)
-      type: (type_array_ptr
-        type: (type_path
-          name: (type_identifier))))
+      (field_identifier)
+      (type_array_ptr
+        (value_path
+          (identifier))))
     (struct_field
-      name: (field_identifier)
-      type: (type_path
-        name: (type_identifier)))))
+      (field_identifier)
+      (value_path
+        (identifier)))))
 
-==============================================================================
+================================================================================
 Empty struct
-==============================================================================
+================================================================================
 
 struct Unit {}
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (struct_declaration
-    name: (type_identifier)))
+    (type_identifier)))
 
-==============================================================================
+================================================================================
 Generic struct
-==============================================================================
+================================================================================
 
-struct Pair<T, U> {
-  a: T,
-  b: U
+struct Pair[T, U] {
+  first: T,
+  second: U,
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (struct_declaration
-    name: (type_identifier)
-    type_parameters: (type_parameters
+    (type_identifier)
+    (type_parameters
       (type_identifier)
       (type_identifier))
     (struct_field
-      name: (field_identifier)
-      type: (type_path
-        name: (type_identifier)))
+      (field_identifier)
+      (value_path
+        (identifier)))
     (struct_field
-      name: (field_identifier)
-      type: (type_path
-        name: (type_identifier)))))
+      (field_identifier)
+      (value_path
+        (identifier)))))
 
-==============================================================================
+================================================================================
 Function declaration without body
-==============================================================================
+================================================================================
 
 @wasm_import("wasi_snapshot_preview1", "fd_write")
 fn fd_write(fd: i32, iovec: *IoVec, count: i32, n: *i32): i32;
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
     (annotation
-      name: (identifier)
+      (identifier)
       (string_literal)
       (string_literal))
-    name: (identifier)
-    parameters: (parameter_list
+    (identifier)
+    (parameter_list
       (parameter
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier)))
+        (identifier)
+        (value_path
+          (identifier)))
       (parameter
-        name: (identifier)
-        type: (type_ptr
-          type: (type_path
-            name: (type_identifier))))
+        (identifier)
+        (type_ptr
+          (value_path
+            (identifier))))
       (parameter
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier)))
+        (identifier)
+        (value_path
+          (identifier)))
       (parameter
-        name: (identifier)
-        type: (type_ptr
-          type: (type_path
-            name: (type_identifier)))))
-    result: (type_path
-      name: (type_identifier))))
+        (identifier)
+        (type_ptr
+          (value_path
+            (identifier)))))
+    (value_path
+      (identifier))))
 
-==============================================================================
-Function with body
-==============================================================================
+================================================================================
+Public function with body
+================================================================================
 
-fn gcd(a: i64, b: i64): i64 {
+pub fn gcd(a: i64, b: i64): i64 {
   return a;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list
+    (identifier)
+    (parameter_list
       (parameter
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier)))
+        (identifier)
+        (value_path
+          (identifier)))
       (parameter
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier))))
-    result: (type_path
-      name: (type_identifier))
-    body: (stmt_block
+        (identifier)
+        (value_path
+          (identifier))))
+    (value_path
+      (identifier))
+    (stmt_block
       (stmt_return
-        value: (value_path
-          name: (identifier))))))
+        (value_path
+          (identifier))))))
 
-==============================================================================
+================================================================================
 Generic function
-==============================================================================
+================================================================================
 
-fn alloc<T>(n: usize): [*]T {
+fn alloc[T](n: usize): [*]T {
   return null;
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    type_parameters: (type_parameters
+    (identifier)
+    (type_parameters
       (type_identifier))
-    parameters: (parameter_list
+    (parameter_list
       (parameter
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier))))
-    result: (type_array_ptr
-      type: (type_path
-        name: (type_identifier)))
-    body: (stmt_block
+        (identifier)
+        (value_path
+          (identifier))))
+    (type_array_ptr
+      (value_path
+        (identifier)))
+    (stmt_block
       (stmt_return
-        value: (null)))))
+        (null)))))
 
-==============================================================================
+================================================================================
 Function without parameters or result
-==============================================================================
+================================================================================
 
 @main()
 fn main() {}
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
     (annotation
-      name: (identifier))
-    name: (identifier)
-    parameters: (parameter_list)
-    body: (stmt_block)))
+      (identifier))
+    (identifier)
+    (parameter_list)
+    (stmt_block)))
 
-==============================================================================
+================================================================================
 Trailing commas
-==============================================================================
+================================================================================
 
-fn f(
-  a: i32,
-  b: i32,
+fn f[
+  T,
+](
+  value: T,
 ) {}
 
 struct S {
-  a: i32,
+  value: i32,
 }
 
-------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 (source_file
   (func_declaration
-    name: (identifier)
-    parameters: (parameter_list
+    (identifier)
+    (type_parameters
+      (type_identifier))
+    (parameter_list
       (parameter
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier)))
-      (parameter
-        name: (identifier)
-        type: (type_path
-          name: (type_identifier))))
-    body: (stmt_block))
+        (identifier)
+        (value_path
+          (identifier))))
+    (stmt_block))
   (struct_declaration
-    name: (type_identifier)
+    (type_identifier)
     (struct_field
-      name: (field_identifier)
-      type: (type_path
-        name: (type_identifier)))))
+      (field_identifier)
+      (value_path
+        (identifier)))))

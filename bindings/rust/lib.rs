@@ -39,6 +39,15 @@ pub const HIGHLIGHTS_QUERY: &'static str = include_str!("../../queries/highlight
 /// The local variable query for this grammar.
 pub const LOCALS_QUERY: &'static str = include_str!("../../queries/locals.scm");
 
+/// The indentation query for this grammar.
+pub const INDENTS_QUERY: &'static str = include_str!("../../queries/indents.scm");
+
+/// The folding query for this grammar.
+pub const FOLDS_QUERY: &'static str = include_str!("../../queries/folds.scm");
+
+/// The textobjects query for this grammar.
+pub const TEXTOBJECTS_QUERY: &'static str = include_str!("../../queries/textobjects.scm");
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -67,7 +76,15 @@ mod tests {
     #[test]
     fn test_queries_are_valid() {
         let language = super::language();
-        tree_sitter::Query::new(language, super::HIGHLIGHTS_QUERY).expect("invalid highlights.scm");
-        tree_sitter::Query::new(language, super::LOCALS_QUERY).expect("invalid locals.scm");
+        for (name, source) in [
+            ("highlights.scm", super::HIGHLIGHTS_QUERY),
+            ("locals.scm", super::LOCALS_QUERY),
+            ("indents.scm", super::INDENTS_QUERY),
+            ("folds.scm", super::FOLDS_QUERY),
+            ("textobjects.scm", super::TEXTOBJECTS_QUERY),
+        ] {
+            tree_sitter::Query::new(language, source)
+                .unwrap_or_else(|_| panic!("invalid {}", name));
+        }
     }
 }

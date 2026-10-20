@@ -17,7 +17,7 @@
 (argument_list
   (_) @parameter.inner)
 
-(type_arguments
+(bracket_expr
   (_) @parameter.inner)
 
 (type_parameters
@@ -56,10 +56,16 @@
 
 (annotation) @attribute.outer
 
-(let_declaration
+(global_var_declaration
   value: (_) @assignment.rhs) @assignment.outer
 
-(let_declaration
+(global_var_declaration
+  name: (identifier) @assignment.lhs)
+
+(var_declaration
+  value: (_) @assignment.rhs) @assignment.outer
+
+(var_declaration
   name: (identifier) @assignment.lhs)
 
 (stmt_assignment

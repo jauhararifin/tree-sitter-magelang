@@ -1,7 +1,7 @@
 ; Highlighting for Magelang.
 ;
-; Later patterns win over earlier ones, so the generic identifier rules come
-; first and the context-specific ones refine them further down.
+; Later patterns win over earlier ones, so generic identifier rules come first
+; and context-specific rules refine them further down.
 
 ; ---------------------------------------------------------------------------
 ; Identifiers
@@ -13,11 +13,13 @@
 
 (field_identifier) @variable.member
 
-; `#match?` rather than `#any-of?`: both Neovim and the tree-sitter CLI
-; highlighter enforce it.
-((type_identifier) @type.builtin
+; Bracket application is shared by indexing and generic instantiation, and dot
+; selection is shared by packages and fields. Built-in types therefore cannot
+; be identified purely from their parent node; matching their names mirrors the
+; compiler's unified expression namespace.
+((identifier) @type.builtin
   (#match? @type.builtin
-    "^(i8|i16|i32|i64|isize|u8|u16|u32|u64|usize|f32|f64|bool|void|opaque)$"))
+    "^(i8|i16|i32|i64|isize|u8|u16|u32|u64|usize|f32|f64|bool|void|opaque|string)$"))
 
 ; ---------------------------------------------------------------------------
 ; Literals
@@ -41,7 +43,7 @@
 (comment) @comment @spell
 
 ; ---------------------------------------------------------------------------
-; Packages
+; Imports and types
 ; ---------------------------------------------------------------------------
 
 (import_declaration
@@ -50,43 +52,47 @@
 (import_declaration
   path: (string_literal) @string.special.path)
 
-(value_path
-  package: (identifier) @module)
-
-(type_path
-  package: (identifier) @module)
-
-(struct_literal
-  type: (value_path
-    package: (identifier) @module))
-
-; ---------------------------------------------------------------------------
-; Types
-; ---------------------------------------------------------------------------
-
 (struct_declaration
+  name: (type_identifier) @type.definition)
+
+(type_alias_declaration
   name: (type_identifier) @type.definition)
 
 (type_parameters
   (type_identifier) @type.parameter)
 
-; The target of a struct literal is a value path, but it names a type.
+; The final component of a struct literal denotes a type. Bracket application
+; may sit between that component and the literal body.
 (struct_literal
   type: (value_path
     name: (identifier) @type))
 
-; ---------------------------------------------------------------------------
-; Parameters
-; ---------------------------------------------------------------------------
+(struct_literal
+  type: (selection_expr
+    field: (field_identifier) @type))
 
-; Struct fields, field initializers and selections are all `field_identifier`
-; and are covered by the generic rule above.
+(struct_literal
+  type: (bracket_expr
+    value: (value_path
+      name: (identifier) @type)))
+
+(struct_literal
+  type: (bracket_expr
+    value: (selection_expr
+      field: (field_identifier) @type)))
+
+; ---------------------------------------------------------------------------
+; Parameters and fields
+; ---------------------------------------------------------------------------
 
 (parameter
   name: (identifier) @variable.parameter)
 
 (func_type_parameter
   name: (identifier) @variable.parameter)
+
+; Struct fields, field initializers, selections and tuple indices already have
+; dedicated node types and are covered by the generic rules above.
 
 ; ---------------------------------------------------------------------------
 ; Functions
@@ -103,6 +109,16 @@
   function: (selection_expr
     field: (field_identifier) @function.call))
 
+(call_expr
+  function: (bracket_expr
+    value: (value_path
+      name: (identifier) @function.call)))
+
+(call_expr
+  function: (bracket_expr
+    value: (selection_expr
+      field: (field_identifier) @function.call)))
+
 ; ---------------------------------------------------------------------------
 ; Annotations
 ; ---------------------------------------------------------------------------
@@ -118,9 +134,11 @@
 ; ---------------------------------------------------------------------------
 
 [
+  "pub"
   "import"
+  "type"
   "struct"
-  "let"
+  "var"
   "defer"
 ] @keyword
 
@@ -187,7 +205,6 @@
   ":"
   ";"
   "."
-  "::"
 ] @punctuation.delimiter
 
 [
@@ -198,16 +215,3 @@
   "{"
   "}"
 ] @punctuation.bracket
-
-; `<` and `>` delimit type parameters and arguments rather than comparing.
-(type_parameters
-  [
-    "<"
-    ">"
-  ] @punctuation.bracket)
-
-(type_arguments
-  [
-    "<"
-    ">"
-  ] @punctuation.bracket)
